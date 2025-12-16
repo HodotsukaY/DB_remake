@@ -243,9 +243,117 @@ html, body {
   justify-content: space-between;
 }
 
+/* ===== 上部UI（戻る＋ハンバーガー） ===== */
+body{ padding-top: 72px; } /* 上UIぶん余白 */
+
+.top-ui{
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 10000;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  pointer-events:none;
+}
+.ui-back,.ui-menu{ pointer-events:auto; }
+
+.ui-back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,0.78);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(0,0,0,0.35);
+}
+.ui-menu{
+  width:48px;
+  height:48px;
+  border-radius:12px;
+  border:none;
+  background:rgba(0,0,0,0.78);
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(0,0,0,0.35);
+  display:grid;
+  place-items:center;
+}
+.ui-back:active,.ui-menu:active{ transform:translateY(1px); }
+
+.ui-burger{ display:flex; flex-direction:column; gap:5px; }
+.ui-burger span{ width:20px; height:2px; background:#fff; border-radius:2px; display:block; }
+
+/* メニュー */
+.menu-overlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.35);
+  opacity:0; pointer-events:none;
+  transition:opacity .18s;
+  z-index:9998;
+}
+.menu-panel{
+  position:fixed;
+  top:72px;
+  right:14px;
+  width:220px;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(0,0,0,0.78);
+  border:1px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(8px);
+  box-shadow:0 20px 50px rgba(0,0,0,0.45);
+  opacity:0;
+  transform:translateY(-6px);
+  pointer-events:none;
+  transition:opacity .18s, transform .18s;
+  z-index:9999;
+}
+.menu-panel a{
+  display:block;
+  padding:10px 12px;
+  border-radius:10px;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  margin-bottom:8px;
+}
+.menu-panel a:last-child{ margin-bottom:0; }
+.menu-overlay.open{ opacity:1; pointer-events:auto; }
+.menu-panel.open{ opacity:1; transform:translateY(0); pointer-events:auto; }
+
 </style>
 </head>
 <body>
+
+<!-- 上部UI（戻る＋メニュー） -->
+<header class="top-ui">
+  <button class="ui-back" type="button" onclick="goBackBJ()">
+    <span>◀</span><span>戻る</span>
+  </button>
+
+  <button class="ui-menu" type="button" aria-label="menu" onclick="toggleMenu()">
+    <span class="ui-burger" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+  </button>
+</header>
+
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<nav class="menu-panel" id="menuPanel" aria-hidden="true">
+  <a href="Stert_Window.php">Start</a>
+  <a href="Login.php">Login</a>
+  <a href="GameChange.php">Games</a>
+  <a href="ranking.php">Ranking</a>
+  <a href="New_User.php">New User</a>
+</nav>
+
 
 <div class="table-area">
 
@@ -682,11 +790,36 @@ document.getElementById("stand-btn").addEventListener("click", async () => {
   document.getElementById("hit-btn").disabled = true;
   document.getElementById("stand-btn").disabled = true;
 
-  await setOpponentName();   // ★ 対戦相手名を設定
-
+  await setOpponentName();   // 対戦相手名
   await newDeck();
   await dealInitialFour();
-})();
+})(); // ★ここが抜けると全部死ぬ
+
+// 戻る（履歴が無いときの保険つき）
+function goBackBJ(){
+  if(history.length > 1) history.back();
+  else location.href = "GameChange.php";
+}
+
+// メニュー開閉
+function toggleMenu(){
+  const p = document.getElementById("menuPanel");
+  const o = document.getElementById("menuOverlay");
+  const open = !p.classList.contains("open");
+  p.classList.toggle("open", open);
+  o.classList.toggle("open", open);
+  p.setAttribute("aria-hidden", String(!open));
+}
+
+function closeMenu(){
+  const p = document.getElementById("menuPanel");
+  const o = document.getElementById("menuOverlay");
+  p.classList.remove("open");
+  o.classList.remove("open");
+  p.setAttribute("aria-hidden","true");
+}
+
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeMenu(); });
 
 </script>
 </body>
